@@ -1,3 +1,5 @@
+from multiprocessing.connection import wait
+from socket import timeout
 from time import sleep
 import requests
 import json
@@ -9,6 +11,7 @@ import concurrent.futures
 class scrape:
     def __init__(self,search,items):
         self.items=items
+        self.proxy_available=[]
         self.url=f'https://api.digikala.com/v1/search/?q={search}&page='
         self.header={
             'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -92,42 +95,45 @@ class scrape:
         # search=''.join(words[:-1])
         return cls(search,items)
 
-def test_proxy():
-    proxy_list=[]
-    with open(r'C:\Users\Mehdi\Desktop\Project\scraping\digikala_scraping\proxy-list.txt',encoding='utf-8')as p:
-        for row in p:
-             proxy_list.append(row)
-    with concurrent.futures.ThreadPoolExecutor()as c:
-        c.map(proxy_check_request,proxy_list)
-         
+    def proxy(self):
+        proxy_list=[]
+        with open(r'C:\Users\Mehdi\Desktop\Project\proxy_list4.txt',encoding='utf-8')as p:
+            for row in p:
+                proxy_list.append(row.strip())                
+            #print(proxy_list)         
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10)as c:
+            c.map(self.proxy_check_request,proxy_list)
+            c.shutdown(wait=True)
+            self.proxy_selection()
           
-def proxy_check_request(proxy):
-    proxy_available=[]
-    try:    
-        check=requests.get('https://www.digikala.com',proxies={'http':proxy,'https':proxy},timeout=3)    
-        print(f'proxy {proxy} is availble')
-        if check.ok:
-            proxy_available.append(proxy)  
-    except:
-        print(f'proxy {proxy} was failed')   
-    
-    lenght=len(proxy_available)
-    print(f'{lenght} proxy is available')   
-    return proxy_available    
+          
+    def proxy_selection(self):
+        print(f'you are in proxy_selection-----------------------------\n {self.proxy_available}')
              
-def arg_parse():
-    parser = argparse.ArgumentParser(description='''*********************** digikala data extraction 
-                                     search field **********************''')
-    parser.add_argument('search', help='enter the name of prodcut ----example---> [mobile]')
-    parser.add_argument('items', help='enter number of prodcuts  ----example---> [22]')
-    args = parser.parse_args()
-    search=args.search
-    items=int(args.items)
-    print(f'your produc name is {search} for {items} items')
-    d=scrape.start(search=search,items=items)
-    d.save_csv()
+    def proxy_check_request(self,proxy):
+       
+       try:    
+           check=requests.get('https://www.google.com',proxies={'http':proxy,'https':proxy},timeout=3)    
+           if check.ok:
+               print(f'proxy {proxy} is availble| \n')
+               self.proxy_available.append(proxy) 
+       except:
+           
+           print(f'proxy {proxy} was failed \n')   
+                
+    def arg_parse():
+        parser = argparse.ArgumentParser(description='''*********************** digikala data extraction 
+                                         search field **********************''')
+        parser.add_argument('search', help='enter the name of prodcut ----example---> [mobile]')
+        parser.add_argument('items', help='enter number of prodcuts  ----example---> [22]')
+        args = parser.parse_args()
+        search=args.search
+        items=int(args.items)
+        print(f'your produc name is {search} for {items} items')
+        d=scrape.start(search=search,items=items)
+        d.save_csv()
 
 if __name__=='__main__':
-    # d=scrape.start(search="گوشی+موبایل",items=30)
+    d=scrape.start(search="گوشی+موبایل",items=30)
     # d.save_csv()
-    arg_parse()
+    d.proxy()
