@@ -75,11 +75,11 @@ class scrape:
         return df
         
         
-    def save_fulldata_json(self):
+    def save_json(self):
         result=self.send_request()
         with open('data.json', 'w', encoding='utf8') as json_file:
              json.dump(result,json_file, ensure_ascii=False)   
-        print('jason fulldata stored in csv file successfully.....')          
+        print('data stored in json file successfully.....')          
     
     def save_csv(self):
         df=self.get_data()
@@ -121,16 +121,21 @@ class scrape:
            
            print(f'proxy {proxy} was failed \n')   
                 
+       
     def arg_parse():
-        parser = argparse.ArgumentParser(description='''*********************** digikala data extraction 
-                                         search field **********************''')
-        parser.add_argument('search', help='enter the name of prodcut ----example---> [mobile]')
-        parser.add_argument('items', help='enter number of prodcuts  ----example---> [22]')
+        parser = argparse.ArgumentParser(
+            description='''*********************** digikala data extraction 
+                                            search field **********************'''
+        )
+        # Use '-s' or '--search' for the search term
+        parser.add_argument('-s', '--search', required=True, help='Enter the name of the product (e.g., "mobile")')
+        # Use '-i' or '--items' for the number of items
+        parser.add_argument('-i', '--items', required=True, type=int, help='Enter the number of products (e.g., 22)')
         args = parser.parse_args()
-        search=args.search
+        search = args.search
         items=int(args.items)
-        print(f'your produc name is {search} for {items} items')
-        d=scrape.start(search=search,items=items)
+        print(f'Your product name is {search} for {items} items')
+        d = scrape.start(search=search, items=items)
         d.save_csv()
 
 if __name__=='__main__':
